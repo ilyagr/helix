@@ -2103,6 +2103,36 @@ fn refresh_config(
     Ok(())
 }
 
+fn show_keymap(
+    cx: &mut compositor::Context,
+    _args: &[Cow<str>],
+    _event: PromptEvent,
+) -> anyhow::Result<()> {
+    let callback = async move {
+        let call: job::Callback = Callback::EditorCompositor(Box::new(
+            move |editor: &mut Editor, compositor: &mut Compositor| {
+                let editor_view = compositor.find::<ui::EditorView>();
+                editor.autoinfo = Some(match editor_view {
+                    Some(editor_view) => match editor_view
+                        .keymaps
+                        .map()
+                        .get(&Mode::Normal)
+                        .and_then(|t| t.node())
+                    {
+                        Some(k) => k.infobox(),
+                        // .or_else(|| Info::new("Can't make infobox", &[("a", "b")])),
+                        _ => Info::new("Keymap fail", &[("a", "b")]),
+                    },
+                    None => Info::new("Editor-view fail", &[("a", "b")]),
+                });
+            },
+        ));
+        Ok(call)
+    };
+    cx.jobs.callback(callback);
+    Ok(())
+}
+
 fn append_output(
     cx: &mut compositor::Context,
     args: &[Cow<str>],
@@ -2793,6 +2823,13 @@ pub const TYPABLE_COMMAND_LIST: &[TypableCommand] = &[
             aliases: &["ts-subtree"],
             doc: "Display tree sitter subtree under cursor, primarily for debugging queries.",
             fun: tree_sitter_subtree,
+            signature: CommandSignature::none(),
+        },
+        TypableCommand {
+            name: "show-keymap",
+            aliases: &[],
+            doc: "Show the keymap",
+            fun: show_keymap,
             signature: CommandSignature::none(),
         },
         TypableCommand {
