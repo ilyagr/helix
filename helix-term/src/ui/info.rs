@@ -5,6 +5,13 @@ use tui::buffer::Buffer as Surface;
 use tui::widgets::{Block, Borders, Paragraph, Widget};
 
 impl Component for Info {
+    fn required_size(&mut self, _viewport: (u16, u16)) -> Option<(u16, u16)> {
+        // TODO: Should this depend on the viewport?
+        Some((
+            self.width + 2,  // +2 for border
+            self.height + 2, // +2 for border
+        ))
+    }
     fn render(&mut self, viewport: Rect, surface: &mut Surface, cx: &mut Context) {
         let text_style = cx.editor.theme.get("ui.text.info");
         let popup_style = cx.editor.theme.get("ui.popup.info");
@@ -12,18 +19,19 @@ impl Component for Info {
         // Calculate the area of the terminal to modify. Because we want to
         // render at the bottom right, we use the viewport's width and height
         // which evaluate to the most bottom right coordinate.
-        let width = self.width + 2 + 2; // +2 for border, +2 for margin
-        let height = self.height + 2; // +2 for border
+        let (width, height) = self
+            .required_size((viewport.width, viewport.height))
+            .expect("required_size is implemented");
         let area = viewport.intersection(Rect::new(
-            viewport.width.saturating_sub(width),
-            viewport.height.saturating_sub(height + 2), // +2 for statusline
+            viewport.width.saturating_sub(width - 2) + 2, // -2 for margin
+            viewport.height.saturating_sub(height + 2),   // +2 for statusline
             width,
             height,
         ));
         surface.clear_with(area, popup_style);
 
         let block = Block::default()
-            .title(self.title.as_str())
+            .title(format!("{}, {} x {}", self.title, self.width, self.height))
             .borders(Borders::ALL)
             .border_style(popup_style);
 
@@ -33,6 +41,7 @@ impl Component for Info {
 
         Paragraph::new(self.text.as_str())
             .style(text_style)
+            .scroll((cx.scroll.unwrap_or_default() as u16, 0))
             .render(inner, surface);
     }
 }

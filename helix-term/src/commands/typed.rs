@@ -2102,6 +2102,32 @@ fn refresh_config(
     Ok(())
 }
 
+fn show_keymap(
+    cx: &mut compositor::Context,
+    _args: &[Cow<str>],
+    _event: PromptEvent,
+) -> anyhow::Result<()> {
+    let callback = async move {
+        let call: job::Callback = Callback::EditorCompositor(Box::new(
+            move |_editor: &mut Editor, compositor: &mut Compositor| {
+                let Some(editor_view) = compositor.find::<ui::EditorView>() else {
+                    return;
+                };
+                let keymaps_map = editor_view.keymaps.map();
+                let keymap = keymaps_map.get(&Mode::Normal);
+                let Some(keymap_node) = keymap.and_then(|t| t.node()) else {
+                    return;
+                };
+                let popup = Popup::new("show-keymap", keymap_node.infobox()).auto_close(true);
+                compositor.replace_or_push("hover", popup);
+            },
+        ));
+        Ok(call)
+    };
+    cx.jobs.callback(callback);
+    Ok(())
+}
+
 fn append_output(
     cx: &mut compositor::Context,
     args: &[Cow<str>],
@@ -2792,6 +2818,13 @@ pub const TYPABLE_COMMAND_LIST: &[TypableCommand] = &[
             aliases: &["ts-subtree"],
             doc: "Display tree sitter subtree under cursor, primarily for debugging queries.",
             fun: tree_sitter_subtree,
+            signature: CommandSignature::none(),
+        },
+        TypableCommand {
+            name: "show-keymap",
+            aliases: &[],
+            doc: "Show the keymap",
+            fun: show_keymap,
             signature: CommandSignature::none(),
         },
         TypableCommand {
