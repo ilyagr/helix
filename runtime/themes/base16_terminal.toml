@@ -14,6 +14,11 @@
 "ui.cursor" = { fg = "light-gray", modifiers = ["reversed"] }
 "ui.cursor.primary" = { fg = "light-gray", modifiers = ["reversed"] }
 "ui.virtual.whitespace" = "light-gray"
+"ui.virtual.indent-guide" = "light-gray"
+"ui.virtual.inlay-hint" = { fg = "white", bg = "gray" }
+"ui.virtual.inlay-hint.parameter" = { fg = "white", bg = "gray"}
+"ui.virtual.inlay-hint.type" = { fg = "white", bg = "gray"}
+"ui.virtual.wrap" = "light-gray"
 "variable" = "light-red"
 "constant.numeric" = "yellow"
 "constant" = "yellow"
